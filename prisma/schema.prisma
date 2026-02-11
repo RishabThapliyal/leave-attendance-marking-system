@@ -1,0 +1,96 @@
+
+
+generator client {
+  // Use the classic JS client with binary engine so we don't need
+  // Accelerate / adapters in this project.
+  provider   = "prisma-client-js"
+  output     = "../src/generated"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================
+// Attendance models
+// ============================
+
+// Main attendance event table
+
+model AttendanceEvent {
+  id          String   @id @default(uuid())
+  employeeId  String
+  date        DateTime
+  eventType   AttendanceEventType
+  status      AttendanceStatus @default(ACTIVE)
+  reason      String?  // optional
+  createdBy   String
+  createdAt   DateTime @default(now())
+
+  // relations
+  overridesOriginal AttendanceEventOverride[] @relation("OriginalEvent")
+  overridesNew      AttendanceEventOverride[] @relation("NewEvent")
+}
+
+// Links old event -> new event for edit/cancel
+model AttendanceEventOverride {
+  id              String           @id @default(uuid())
+  originalEventId String
+  action          AttendanceOverrideAction
+  newEventId      String?
+  createdBy       String
+  createdAt       DateTime @default(now())
+
+  // relations
+  originalEvent AttendanceEvent @relation("OriginalEvent", fields: [originalEventId], references: [id])
+  newEvent      AttendanceEvent? @relation("NewEvent", fields: [newEventId], references: [id])
+
+  @@index([originalEventId])
+  @@index([newEventId])
+}
+
+// Month-level locks (per employee)
+model AttendanceMonthLock {
+  id         String   @id @default(uuid())
+  employeeId String
+  month      String   // format: "YYYY-MM"
+  lockedBy   String
+  lockedAt   DateTime @default(now())
+
+  @@unique([employeeId, month])
+}
+
+// Audit log for all actions
+model AttendanceAuditLog {
+  id        String   @id @default(uuid())
+  actorId   String
+  action    String
+  entityId  String
+  payload   Json
+  createdAt DateTime @default(now())
+
+  @@index([entityId])
+}
+
+// ============================
+// Enums (as per PDF types)
+// ============================
+
+enum AttendanceEventType {
+  FULL_LEAVE
+  HALF_LEAVE_AM
+  HALF_LEAVE_PM
+  WFH
+  VOLUNTARY_WORK
+}
+
+enum AttendanceStatus {
+  ACTIVE
+  CANCELLED
+}
+
+enum AttendanceOverrideAction {
+  CANCEL
+  MODIFY
+}
