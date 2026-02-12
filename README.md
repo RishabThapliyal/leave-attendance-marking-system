@@ -61,12 +61,29 @@ This project was built from a formal specification (PDF) which defines the datab
 
 ## Screenshots
 
+"Main calender view"
 ![Main calendar view](./public/Images/calendar-main.png)
 
+“Rule engine blocking voluntary work on weekdays (400)”
 ![Rule violation example](./public/Images/calendar-rule-violation.png)
-“Rule engine blocking voluntary work on weekdays (400).”
 
+“Manager successfully locks the month”
+![Locked Month example](./public/Images/calendar-month-lock-success.png)
+
+“Locked month prevents new changes (423)”
+![Locked month 423 error example](./public/Images/calendar-month-locked-error.png)
+
+"AttendanceEvent table"
 ![Database attendance events](./public/Images/db-attendance-events.png)
+
+"AttendanceMonthLock table"
+![Database attendance MonthLock](./public/Images/db-attendance-month-locks.png)
+
+"AttendanceAuditLog table"
+![Database attendance AuditLog](./public/Images/db-attendance-audit-log.png)
+
+"AttendanceEventOverride table"
+![Database attendance Override](./public/Images/db-attendance-overrides.png)
 
 ---
 
