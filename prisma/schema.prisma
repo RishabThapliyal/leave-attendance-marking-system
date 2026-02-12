@@ -31,6 +31,8 @@ model AttendanceEvent {
   // relations
   overridesOriginal AttendanceEventOverride[] @relation("OriginalEvent")
   overridesNew      AttendanceEventOverride[] @relation("NewEvent")
+
+  
 }
 
 // Links old event -> new event for edit/cancel
@@ -48,6 +50,7 @@ model AttendanceEventOverride {
 
   @@index([originalEventId])
   @@index([newEventId])
+  
 }
 
 // Month-level locks (per employee)
