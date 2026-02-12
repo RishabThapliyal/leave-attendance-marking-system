@@ -64,6 +64,7 @@ This project was built from a formal specification (PDF) which defines the datab
 ![Main calendar view](./public/Images/calendar-main.png)
 
 ![Rule violation example](./public/Images/calendar-rule-violation.png)
+“Rule engine blocking voluntary work on weekdays (400).”
 
 ![Database attendance events](./public/Images/db-attendance-events.png)
 
