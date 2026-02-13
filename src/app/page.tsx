@@ -12,6 +12,7 @@ import {
   useLockMonthMutation,
   useMarkAttendanceMutation,
 } from "@/store/attendanceApi";
+
 import { employees, type Employee } from "@/data/employees";
 
 function toYearMonth(date: Date) {
@@ -20,6 +21,7 @@ function toYearMonth(date: Date) {
   return `${year}-${month}`;
 }
 
+//object
 const eventColors: Record<AttendanceEventDto["eventType"], string> = {
   FULL_LEAVE: "#ef4444", // red
   HALF_LEAVE_AM: "#f97316", // orange
@@ -28,7 +30,11 @@ const eventColors: Record<AttendanceEventDto["eventType"], string> = {
   VOLUNTARY_WORK: "#22c55e", // green
 };
 
-const eventTypeOptions: { value: AttendanceEventDto["eventType"]; label: string }[] = [
+//array -> Har element ek object hai
+const eventTypeOptions: {
+  value: AttendanceEventDto["eventType"];
+  label: string;
+}[] = [
   { value: "FULL_LEAVE", label: "Full Leave" },
   { value: "HALF_LEAVE_AM", label: "Half Leave (AM)" },
   { value: "HALF_LEAVE_PM", label: "Half Leave (PM)" },
@@ -71,18 +77,12 @@ export default function AttendanceCalendarPage() {
 
   const { data, isLoading, isError } = useGetAttendanceQuery(
     currentEmployee
-      ? {
-          month,
-          employeeId: currentEmployee.id,
-        }
-      : // When no employee is selected, skip query by passing dummy values.
-        {
-          month,
-          employeeId: "no-employee",
-        },
+      ? { month, employeeId: currentEmployee.id }
+      : { month, employeeId: "no-employee" },
   );
 
-  const [markAttendance, { isLoading: isMarking }] = useMarkAttendanceMutation();
+  const [markAttendance, { isLoading: isMarking }] =
+    useMarkAttendanceMutation();
   const [cancelAttendance] = useCancelAttendanceMutation();
   const [lockMonth, { isLoading: isLocking }] = useLockMonthMutation();
 
@@ -93,8 +93,10 @@ export default function AttendanceCalendarPage() {
       title: event.eventType.replaceAll("_", " "),
       start: event.date,
       allDay: true,
-      backgroundColor: event.status === "ACTIVE" ? eventColors[event.eventType] : "#9ca3af",
-      borderColor: event.status === "ACTIVE" ? eventColors[event.eventType] : "#9ca3af",
+      backgroundColor:
+        event.status === "ACTIVE" ? eventColors[event.eventType] : "#9ca3af",
+      borderColor:
+        event.status === "ACTIVE" ? eventColors[event.eventType] : "#9ca3af",
       textColor: event.status === "ACTIVE" ? "white" : "black",
       extendedProps: {
         status: event.status,
@@ -106,6 +108,8 @@ export default function AttendanceCalendarPage() {
 
   const handleDateClick = (arg: DateClickArg) => {
     setSelectedDate(arg.dateStr);
+    setEditingEventId(null);
+    setMarkError(null);
   };
 
   const handleMarkAttendance = async () => {
@@ -128,18 +132,20 @@ export default function AttendanceCalendarPage() {
         employeeId: currentEmployee.id,
         createdBy: currentEmployee.id,
       }).unwrap();
+
       setReason("");
       setEditingEventId(null);
-      showToast(editingEventId ? "Attendance updated." : "Attendance saved.", "success");
+      showToast(
+        editingEventId ? "Attendance updated." : "Attendance saved.",
+        "success",
+      );
     } catch (e) {
       console.error("Failed to mark attendance", e);
       const err = e as any;
       const status: number | undefined =
         err?.status ?? err?.originalStatus ?? err?.data?.statusCode;
       const apiMessage =
-        err?.data?.error ??
-        (typeof err?.error === "string" ? err.error : null);
-
+        err?.data?.error ?? (typeof err?.error === "string" ? err.error : null);
       const prefix = status ? `[${status}] ` : "";
       if (apiMessage) {
         setMarkError(prefix + apiMessage);
@@ -194,8 +200,7 @@ export default function AttendanceCalendarPage() {
       const status: number | undefined =
         err?.status ?? err?.originalStatus ?? err?.data?.statusCode;
       const apiMessage =
-        err?.data?.error ??
-        (typeof err?.error === "string" ? err.error : null);
+        err?.data?.error ?? (typeof err?.error === "string" ? err.error : null);
       const prefix = status ? `[${status}] ` : "";
       setLockMessage(prefix + (apiMessage ?? "Failed to lock month."));
       showToast(apiMessage ?? "Failed to lock month.", "error");
@@ -230,9 +235,9 @@ export default function AttendanceCalendarPage() {
                 {currentEmployee ? (
                   <>
                     Showing attendance for{" "}
-                    <span className="font-medium">{currentEmployee.name}</span> (
-                    <span className="uppercase">{currentEmployee.role}</span>) – month:{" "}
-                    <span className="font-medium">{month}</span>
+                    <span className="font-medium">{currentEmployee.name}</span>{" "}
+                    (<span className="uppercase">{currentEmployee.role}</span>)
+                    – month: <span className="font-medium">{month}</span>
                   </>
                 ) : (
                   <>Select an employee to begin.</>
@@ -240,7 +245,8 @@ export default function AttendanceCalendarPage() {
               </p>
               {selectedDate && (
                 <p className="text-xs text-zinc-400 dark:text-zinc-500">
-                  Selected date: <span className="font-medium">{selectedDate}</span>
+                  Selected date:{" "}
+                  <span className="font-medium">{selectedDate}</span>
                   {editingEventId ? " (editing existing event)" : null}
                 </p>
               )}
@@ -261,7 +267,9 @@ export default function AttendanceCalendarPage() {
           )}
 
           {isLoading && !data ? (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">Loading attendance…</p>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              Loading attendance…
+            </p>
           ) : (
             <FullCalendar
               plugins={[dayGridPlugin, interactionPlugin]}
@@ -270,9 +278,13 @@ export default function AttendanceCalendarPage() {
               events={events}
               dateClick={handleDateClick}
               eventClick={handleEventClick}
-              dayCellClassNames={(arg) =>
-                arg.dateStr === selectedDate ? ["fc-day-selected"] : []
-              }
+              dayCellClassNames={(arg) => {
+                const year = arg.date.getFullYear();
+                const month = String(arg.date.getMonth() + 1).padStart(2, "0");
+                const day = String(arg.date.getDate()).padStart(2, "0");
+                const cellDate = `${year}-${month}-${day}`;
+                return cellDate === selectedDate ? ["fc-day-selected"] : [];
+              }}
               datesSet={(arg) => {
                 const nextMonth = toYearMonth(arg.start);
                 if (nextMonth !== month) {
@@ -286,8 +298,8 @@ export default function AttendanceCalendarPage() {
         <aside className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-800 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 lg:w-1/4">
           <h2 className="mb-2 text-base font-semibold">Login / Employee</h2>
           <p className="mb-3 text-xs text-zinc-500 dark:text-zinc-400">
-            Choose an employee to act as. This is a simple demo login – in a real app this
-            would be backed by proper authentication.
+            Choose an employee to act as. This is a simple demo login – in a
+            real app this would be backed by proper authentication.
           </p>
 
           <div className="mb-4">
@@ -330,7 +342,8 @@ export default function AttendanceCalendarPage() {
 
           <h2 className="mb-2 text-base font-semibold">Mark Attendance</h2>
           <p className="mb-3 text-xs text-zinc-500 dark:text-zinc-400">
-            Click on any date in the calendar to select it, then choose an attendance type and save.
+            Click on any date in the calendar to select it, then choose an
+            attendance type and save.
           </p>
 
           <div className="mb-3">
@@ -353,7 +366,9 @@ export default function AttendanceCalendarPage() {
               className="w-full rounded-md border border-zinc-300 bg-white px-2 py-1 text-xs dark:border-zinc-700 dark:bg-zinc-900"
               value={selectedEventType}
               onChange={(e) =>
-                setSelectedEventType(e.target.value as AttendanceEventDto["eventType"])
+                setSelectedEventType(
+                  e.target.value as AttendanceEventDto["eventType"],
+                )
               }
             >
               {eventTypeOptions.map((opt) => (
@@ -386,9 +401,10 @@ export default function AttendanceCalendarPage() {
                 ? "Updating…"
                 : "Saving…"
               : editingEventId
-              ? "Update Attendance"
-              : "Save Attendance"}
+                ? "Update Attendance"
+                : "Save Attendance"}
           </button>
+
           {editingEventId && (
             <button
               type="button"
@@ -401,29 +417,31 @@ export default function AttendanceCalendarPage() {
               Cancel Edit
             </button>
           )}
+
           {markError && (
-            <p className="mb-2 text-xs text-red-500">
-              {markError}
-            </p>
+            <p className="mb-2 text-xs text-red-500">{markError}</p>
           )}
 
           <hr className="my-3 border-zinc-200 dark:border-zinc-800" />
 
           <h2 className="mb-2 text-base font-semibold">Month Lock</h2>
           <p className="mb-3 text-xs text-zinc-500 dark:text-zinc-400">
-            When a month is locked, no further changes are allowed. Only managers/admins can
-            lock a month.
+            When a month is locked, no further changes are allowed. Only
+            managers/admins can lock a month.
           </p>
           <button
             type="button"
             disabled={
-              !currentEmployee || currentEmployee.role === "EMPLOYEE" || isLocking
+              !currentEmployee ||
+              currentEmployee.role === "EMPLOYEE" ||
+              isLocking
             }
             onClick={handleLockMonth}
             className="w-full rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white disabled:cursor-not-allowed disabled:bg-red-400"
           >
             {isLocking ? "Locking…" : `Lock ${month}`}
           </button>
+
           {currentEmployee && currentEmployee.role === "EMPLOYEE" && (
             <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
               Only MANAGER / ADMIN can lock months.
@@ -451,4 +469,3 @@ function LegendDot({ color, label }: { color: string; label: string }) {
     </span>
   );
 }
-

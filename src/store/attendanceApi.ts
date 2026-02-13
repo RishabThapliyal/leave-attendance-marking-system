@@ -44,6 +44,14 @@ export type LockMonthBody = {
   lockedBy: string;
 };
 
+export type LockMonthResponse = {
+  id: string;
+  employeeId: string;
+  month: string;
+  lockedBy: string;
+  lockedAt: string;
+};
+
 export const attendanceApi = createApi({
   reducerPath: "attendanceApi",
   baseQuery,
@@ -54,7 +62,9 @@ export const attendanceApi = createApi({
         url: `/attendance`,
         params: { month, employeeId },
       }),
-      providesTags: (_result, _err, arg) => [{ type: "Attendance", id: arg.month }],
+      providesTags: (_result, _err, arg) => [
+        { type: "Attendance", id: arg.month },
+      ],
     }),
 
     markAttendance: build.mutation<AttendanceEventDto, MarkAttendanceBody>({
@@ -63,10 +73,15 @@ export const attendanceApi = createApi({
         method: "POST",
         body,
       }),
-      invalidatesTags: (_result, _err, body) => [{ type: "Attendance", id: body.date.slice(0, 7) }],
+      invalidatesTags: (_result, _err, body) => [
+        { type: "Attendance", id: body.date.slice(0, 7) },
+      ],
     }),
 
-    cancelAttendance: build.mutation<{ success: true }, { id: string; body: CancelAttendanceBody }>({
+    cancelAttendance: build.mutation<
+      { success: true },
+      { id: string; body: CancelAttendanceBody }
+    >({
       query: ({ id, body }) => ({
         url: `/attendance/${id}/cancel`,
         method: "POST",
@@ -75,16 +90,15 @@ export const attendanceApi = createApi({
       invalidatesTags: (_result, _err, _arg) => [{ type: "Attendance" }],
     }),
 
-    lockMonth: build.mutation<
-      { id: string; employeeId: string; month: string; lockedBy: string; lockedAt: string },
-      LockMonthBody
-    >({
+    lockMonth: build.mutation<LockMonthResponse, LockMonthBody>({
       query: (body) => ({
         url: `/attendance/lock`,
         method: "POST",
         body,
       }),
-      invalidatesTags: (_result, _err, arg) => [{ type: "Attendance", id: arg.month }],
+      invalidatesTags: (_result, _err, arg) => [
+        { type: "Attendance", id: arg.month },
+      ],
     }),
   }),
 });
@@ -95,4 +109,3 @@ export const {
   useCancelAttendanceMutation,
   useLockMonthMutation,
 } = attendanceApi;
-
