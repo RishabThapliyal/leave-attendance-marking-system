@@ -295,7 +295,10 @@ export default function AttendanceCalendarPage() {
           )}
         </div>
 
-        <aside className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-800 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 lg:w-1/4">
+        <aside
+          className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-800
+                              dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 lg:w-1/4"
+        >
           <h2 className="mb-2 text-base font-semibold">Login / Employee</h2>
           <p className="mb-3 text-xs text-zinc-500 dark:text-zinc-400">
             Choose an employee to act as. This is a simple demo login – in a
@@ -354,7 +357,8 @@ export default function AttendanceCalendarPage() {
               type="text"
               value={selectedDate ?? "None"}
               readOnly
-              className="w-full rounded-md border border-zinc-300 bg-zinc-100 px-2 py-1 text-xs text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+              className="w-full rounded-md border border-zinc-300 bg-zinc-100 px-2 py-1 text-xs
+                          text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
             />
           </div>
 

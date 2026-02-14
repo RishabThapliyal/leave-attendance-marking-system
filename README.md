@@ -249,7 +249,7 @@ All API routes are implemented using Next.js App Router under `src/app/api/atten
 
 ## Live Demo Link
 
-Live demo: https://your-deployment-url.com
+Live demo: https://leave-attendance-system.netlify.app/
 
 ## Extra Documentation
 
