@@ -12,8 +12,9 @@ Employees can mark leave / WFH / voluntary work with strong backend rules, month
   - Treats attendance as **immutable events** (no in-place edits).
   - Enforces **server-side rules** for all operations.
   - Supports **month-level locking** and **audit logging** for future payroll/integrations.
+  - Is deployed in production using **Netlify (serverless)** + **Neon (Cloud PostgreSQL)**.
 
-This project was built from a formal specification (PDF) which defines the database schema, API endpoints, rules, and definition of done.
+All timestamps are stored in **UTC** in the database and converted to the user’s local timezone on the client.
 
 ---
 
@@ -61,28 +62,28 @@ This project was built from a formal specification (PDF) which defines the datab
 
 ## Screenshots
 
-"Main calender view"
+"Main Calendar View"
 ![Main calendar view](./public/Images/calendar-main.png)
 
-“Rule engine blocking voluntary work on weekdays (400)”
+“Rule Engine Blocking Weekday Voluntary Work (400)”
 ![Rule violation example](./public/Images/calendar-rule-violation.png)
 
-“Manager successfully locks the month”
+“Manager Successfully Locks Month”
 ![Locked Month example](./public/Images/calendar-month-lock-success.png)
 
-“Locked month prevents new changes (423)”
+“Locked Month Prevents Changes (423)”
 ![Locked month 423 error example](./public/Images/calendar-month-locked-error.png)
 
-"AttendanceEvent table"
+"AttendanceEvent Table"
 ![Database attendance events](./public/Images/db-attendance-events.png)
 
-"AttendanceMonthLock table"
+"AttendanceMonthLock Table"
 ![Database attendance MonthLock](./public/Images/db-attendance-month-locks.png)
 
-"AttendanceAuditLog table"
+"AttendanceAuditLog Table"
 ![Database attendance AuditLog](./public/Images/db-attendance-audit-log.png)
 
-"AttendanceEventOverride table"
+"AttendanceEventOverride Table"
 ![Database attendance Override](./public/Images/db-attendance-overrides.png)
 
 ---
@@ -246,6 +247,13 @@ All API routes are implemented using Next.js App Router under `src/app/api/atten
 - If already locked: returns `{ "error": "This month is already locked." }` with status `409`.
 
 ---
+
+### 7. Deployment
+
+-Frontend + API deployed on Netlify
+-Database hosted on Neon (Cloud PostgreSQL)
+-Serverless architecture
+-Environment variables configured via Netlify dashboard
 
 ## Live Demo Link
 
