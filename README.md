@@ -250,10 +250,10 @@ All API routes are implemented using Next.js App Router under `src/app/api/atten
 
 ### 7. Deployment
 
--Frontend + API deployed on Netlify
--Database hosted on Neon (Cloud PostgreSQL)
--Serverless architecture
--Environment variables configured via Netlify dashboard
+- Frontend + API deployed on Netlify
+- Database hosted on Neon (Cloud PostgreSQL)
+- Serverless architecture
+- Environment variables configured via Netlify dashboard
 
 ## Live Demo Link
 
