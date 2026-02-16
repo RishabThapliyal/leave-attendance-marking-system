@@ -8,7 +8,11 @@ This document describes every important part of the project: folder structure, f
 
 - **Purpose:** Enterprise leave and attendance marking using a calendar. Employees mark attendance (full/half leave, WFH, voluntary work); data is immutable, validated on the server, and audited.
 - **Stack:** Next.js (App Router), React, TypeScript, FullCalendar, Redux Toolkit + RTK Query, Prisma, PostgreSQL, Zod.
-- **Design (per spec):** Events are append-only (edit = cancel + create new); month-level locking; backend rule engine; full audit logging.
+- **Architecture Principles (as per spec):**
+  - Events are append-only (edit = cancel + create new).
+  - Month-level locking.
+  - Centralized backend rule engine.
+  - Full audit logging for all actions.
 
 ---
 
@@ -57,28 +61,44 @@ major-project/
 
 ### 3.1 `src/app/layout.tsx`
 
-- **Role:** Root layout; wraps app in Redux `Providers` and loads Geist fonts.
-- **Important:** `Providers` wraps `{children}` so every page has access to the RTK store.
+**Role:** Root layout of the application.
+
+- Wraps the entire app inside Redux `<Providers>`.
+- Loads Geist fonts.
+- Ensures all pages have access to the RTK store.
 
 ---
 
 ### 3.2 `src/app/page.tsx`
 
-- **Role:** Single-page UI: FullCalendar + employee selector + “Mark Attendance” form + Month Lock.
-- **State:**
-  - `month` – current calendar month (YYYY-MM), synced with FullCalendar `datesSet`.
-  - `selectedDate` – date clicked on calendar (YYYY-MM-DD).
-  - `selectedEventType`, `reason` – form fields for marking.
-  - `editingEventId` – when user clicks an event, we’re in “edit” mode (cancel + create new).
-  - `markError`, `lockMessage` – inline error/success messages.
-  - `currentEmployee` – selected from dropdown (persisted in localStorage).
-  - `toasts` – list of toast objects `{ id, message, type }` for success/error toasts (auto-dismiss 3s).
+- **Role:** Main UI page (Calendar + Form + Month Lock).
+
+  **Important State Variables**
+  - `month` – Current calendar month (`YYYY-MM`).
+  - `selectedDate` – Clicked date (`YYYY-MM-DD`).
+  - `selectedEventType`, `reason` – Form inputs.
+  - `editingEventId` – Indicates edit mode (cancel + create).
+  - `markError`, `lockMessage` – Inline feedback messages.
+  - `currentEmployee` – Selected employee (persisted in `localStorage`).
+  - `toasts` – Array of toast messages `{ id, message, type }`.
+
 - **Important functions:**
-  - **`toYearMonth(date)`** – converts `Date` to `"YYYY-MM"`.
-  - **`handleDateClick(arg)`** – sets `selectedDate` to clicked date string.
-  - **`handleMarkAttendance()`** – if `editingEventId` is set, calls `cancelAttendance` then `markAttendance`; else only `markAttendance`. Shows toast and sets `markError` on failure (with optional status prefix e.g. `[423]`).
-  - **`handleEventClick(clickInfo)`** – for ACTIVE events only: fills form with event’s date, type, reason and sets `editingEventId` (edit mode).
-  - **`handleLockMonth()`** – calls `lockMonth` with current employee and month; shows toast and `lockMessage`.
+  - **`toYearMonth(date)`**
+    - Converts a `Date` object to `"YYYY-MM"`.
+  - **`handleDateClick(arg)`**
+    - Sets `selectedDate` when a calendar date is clicked.
+  - **`handleMarkAttendance()`**
+    - If editing → first calls `cancelAttendance`
+    - Then calls `markAttendance`
+    - Shows toast on success/failure
+    - Prefixes error with status code when available (e.g., `[423]`)
+  - **`handleEventClick(clickInfo)`**
+    - Prefills form for ACTIVE events only.
+    - Sets `editingEventId`.
+  - **`handleLockMonth()`**
+    - Calls `lockMonth` mutation.
+    - Displays result in toast and inline message.
+
 - **RTK hooks used:**
   - `useGetAttendanceQuery({ month, employeeId })` – when no employee, `employeeId: "no-employee"` to skip real request.
   - `useMarkAttendanceMutation()`, `useCancelAttendanceMutation()`, `useLockMonthMutation()`.
@@ -221,10 +241,394 @@ major-project/
 
 ## 4. How the UI and API Work Together
 
-- User selects employee → `currentEmployee` set → `useGetAttendanceQuery({ month, employeeId })` runs and calendar shows that employee’s events.
-- User clicks a date → `selectedDate` set; form shows that date; user picks type/reason and clicks Save → `markAttendance` mutation → POST /api/attendance → service runs rules and repository → success/error reflected in UI and toasts.
-- User clicks an existing ACTIVE event → form prefilled, `editingEventId` set; Save → first `cancelAttendance` (POST …/cancel), then `markAttendance` (POST /attendance) → edit = cancel + create (per spec).
-- Manager/Admin clicks Lock → `lockMonth` mutation → POST /api/attendance/lock → service creates lock and audit; further mark/cancel for that month get 423 from rules and show error in UI and toast.
+---
+
+## 4. How the UI and API Work Together (Detailed Flow)
+
+This section explains how user interactions in the UI trigger API calls, how the backend processes them, and how the UI reflects changes.
+
+The system follows a clean layered architecture:
+
+```
+UI (React + FullCalendar)
+        ↓
+RTK Query (Frontend Data Layer)
+        ↓
+Next.js API Route
+        ↓
+Service Layer (Business Logic)
+        ↓
+Rule Engine (Validation)
+        ↓
+Repository (Prisma DB Access)
+        ↓
+PostgreSQL Database
+```
+
+---
+
+## 4.1 Employee Selection Flow
+
+### Step 1 — User selects employee
+
+In the right sidebar, user selects an employee from dropdown.
+
+- `currentEmployee` state is updated.
+- Employee ID is saved in `localStorage`:
+
+```ts
+window.localStorage.setItem("currentEmployeeId", emp.id);
+```
+
+This ensures the selected employee persists after page refresh.
+
+---
+
+### Step 2 — Attendance data is fetched automatically
+
+The following RTK Query hook runs:
+
+```ts
+useGetAttendanceQuery({ month, employeeId });
+```
+
+RTK Query automatically:
+
+- Sends:
+  ```
+  GET /api/attendance?month=YYYY-MM&employeeId=EMP_ID
+  ```
+- Caches the result using:
+  ```ts
+  { type: "Attendance", id: month }
+  ```
+
+---
+
+### Step 3 — Backend Processing
+
+API Route:
+
+```
+GET /api/attendance
+```
+
+Flow:
+
+1. Query params validated using Zod.
+2. `getAttendanceForMonth()` called in service layer.
+3. Service calls repository:
+   - `getAttendanceEventsForMonth()`
+4. Prisma queries PostgreSQL.
+5. Data returned to frontend.
+
+---
+
+### Step 4 — Calendar renders events
+
+Frontend:
+
+- Maps API response into FullCalendar event objects.
+- Applies colors based on `eventType`.
+- CANCELLED events displayed in grey.
+
+The calendar now reflects selected employee’s attendance.
+
+---
+
+## 4.2 Mark Attendance Flow (Create Event)
+
+### Step 1 — User clicks a date
+
+```ts
+handleDateClick(arg);
+```
+
+- `selectedDate` is set (`YYYY-MM-DD`)
+- Form shows selected date.
+
+---
+
+### Step 2 — User fills form and clicks Save
+
+```ts
+handleMarkAttendance();
+```
+
+Triggers RTK Query mutation:
+
+```ts
+markAttendance(body);
+```
+
+Which sends:
+
+```
+POST /api/attendance
+```
+
+---
+
+### Step 3 — Backend Processing
+
+API Route:
+
+```
+POST /api/attendance
+```
+
+1. Body validated using Zod schema.
+2. `markAttendance()` called in service layer.
+
+---
+
+### Step 4 — Service Layer Logic
+
+Service performs:
+
+1. Check if month is locked:
+
+   ```
+   checkMonthNotLocked()
+   ```
+
+   If locked → return 423.
+
+2. Fetch existing events for that date.
+
+3. Run rule engine:
+   ```
+   checkCanAddEvent()
+   ```
+
+Rules enforced:
+
+- One full-day event per date.
+- Maximum two half-days (AM + PM).
+- No Leave + WFH same date.
+- Voluntary work allowed only on weekends.
+- Cancelled events ignored.
+
+If validation fails → returns 400 / 409 / 423.
+
+---
+
+### Step 5 — Repository Layer
+
+If rules pass:
+
+- Create `AttendanceEvent`.
+- Create `AttendanceAuditLog`.
+
+Prisma writes to PostgreSQL.
+
+---
+
+### Step 6 — UI Update
+
+Backend returns:
+
+```
+201 Created
+```
+
+RTK Query:
+
+- Invalidates:
+  ```ts
+  { type: "Attendance", id: month }
+  ```
+- Automatically refetches attendance.
+
+Calendar updates instantly.
+
+Success toast appears.
+
+---
+
+## 4.3 Edit Flow (Cancel + Create Pattern)
+
+⚠ Important Design Decision:  
+Events are immutable. We never update rows directly.
+
+---
+
+### Step 1 — User clicks ACTIVE event
+
+```ts
+handleEventClick(clickInfo);
+```
+
+- Form prefilled.
+- `editingEventId` set.
+
+---
+
+### Step 2 — User clicks Save
+
+Inside:
+
+```ts
+handleMarkAttendance();
+```
+
+If editing:
+
+```ts
+await cancelAttendance();
+await markAttendance();
+```
+
+---
+
+### Step 3 — Cancel Flow
+
+```
+POST /api/attendance/:id/cancel
+```
+
+Backend:
+
+1. Check month not locked.
+2. Mark event as `CANCELLED`.
+3. Create `AttendanceEventOverride`.
+4. Write audit log.
+
+---
+
+### Step 4 — Create New Event
+
+Then normal create flow runs again.
+
+Result:
+
+- Old event → CANCELLED
+- New event → ACTIVE
+
+This maintains immutable history.
+
+---
+
+## 4.4 Month Lock Flow
+
+Only MANAGER / ADMIN can lock.
+
+---
+
+### Step 1 — Manager clicks Lock Month
+
+```ts
+handleLockMonth();
+```
+
+Triggers:
+
+```
+POST /api/attendance/lock
+```
+
+---
+
+### Step 2 — Backend Processing
+
+Service layer:
+
+1. Check if month already locked.
+2. If not:
+   - Create `AttendanceMonthLock`
+   - Create audit log
+
+Returns 201.
+
+---
+
+### Step 3 — After Lock
+
+Any future:
+
+- markAttendance
+- cancelAttendance
+
+Fails in:
+
+```
+checkMonthNotLocked()
+```
+
+Returns:
+
+```
+423 This month is locked
+```
+
+Frontend shows error.
+
+---
+
+## 4.5 Caching & Automatic Sync
+
+RTK Query uses:
+
+```ts
+providesTags;
+invalidatesTags;
+```
+
+When:
+
+- Event created
+- Event cancelled
+- Month locked
+
+It automatically:
+
+1. Invalidates cache
+2. Refetches GET attendance
+3. Updates UI
+
+No manual refresh required.
+
+---
+
+## 4.6 Complete Lifecycle Example
+
+Example:
+
+1. Alice selects 16 Feb.
+2. Marks FULL_LEAVE.
+3. Backend validates and stores event.
+4. Calendar shows red event.
+5. Manager locks February.
+6. Alice tries to mark 20 Feb.
+7. Backend returns 423.
+8. UI shows error.
+
+System ensures:
+
+- Data integrity
+- Rule enforcement
+- Audit logging
+- Immutable history
+
+---
+
+## Summary
+
+The architecture follows enterprise best practices:
+
+- UI triggers mutations only
+- Backend controls validation
+- Rule engine enforces business logic
+- Repository isolates database access
+- Audit logs track all changes
+- RTK Query keeps UI synchronized
+
+This makes the system:
+
+- Maintainable
+- Testable
+- Scalable
+- Production-ready
 
 ---
 
