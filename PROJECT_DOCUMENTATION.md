@@ -239,10 +239,6 @@ major-project/
 
 ---
 
-## 4. How the UI and API Work Together
-
----
-
 ## 4. How the UI and API Work Together (Detailed Flow)
 
 This section explains how user interactions in the UI trigger API calls, how the backend processes them, and how the UI reflects changes.
