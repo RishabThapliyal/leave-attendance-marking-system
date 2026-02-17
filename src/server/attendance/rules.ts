@@ -4,7 +4,7 @@ import type {
 } from "../../generated/client";
 
 // ---------------------------------------------------------------------------
-// Types (PDF §13 Error Handling: 400 Rule violation, 401 Unauthorized, 409 Conflict, 423 Month locked)
+// Types ( Error Handling: 400 Rule violation, 401 Unauthorized, 409 Conflict, 423 Month locked)
 // ---------------------------------------------------------------------------
 
 export type HttpStatusForAttendance = 400 | 401 | 409 | 423;
@@ -13,7 +13,7 @@ export type RuleResult =
   | { allowed: true }
   | { allowed: false; reason: string; statusCode: HttpStatusForAttendance };
 
-/** PDF §13: 401 Unauthorized – use when request has no valid auth (controller/service layer) */
+/** 401 Unauthorized – use when request has no valid auth (controller/service layer) */
 export function resultUnauthorized(): RuleResult {
   return {
     allowed: false,
@@ -52,7 +52,7 @@ function activeEvents(events: EventOnDate[]): EventOnDate[] {
 }
 
 // ---------------------------------------------------------------------------
-// Rule 1: No edits on locked months (PDF – Month lock)
+// Rule 1: No edits on locked months ( Month lock)
 // ---------------------------------------------------------------------------
 
 export function checkMonthNotLocked(isMonthLocked: boolean): RuleResult {
@@ -67,7 +67,7 @@ export function checkMonthNotLocked(isMonthLocked: boolean): RuleResult {
 }
 
 // ---------------------------------------------------------------------------
-// Rules 2–5: Can we add this event on this date? (PDF: one full-day, half AM+PM, no leave+WFH same day, voluntary weekend only)
+// Rules 2–5: Can we add this event on this date? ( one full-day, half AM+PM, no leave+WFH same day, voluntary weekend only)
 // ---------------------------------------------------------------------------
 
 export function checkCanAddEvent(params: {
@@ -89,19 +89,7 @@ export function checkCanAddEvent(params: {
     }
   }
 
-  // --- Rule: One full-day event per date (PDF) ---
-  if (eventType === FULL_DAY) {
-    const hasFullDay = existing.some((e) => e.eventType === FULL_DAY);
-    if (hasFullDay) {
-      return {
-        allowed: false,
-        reason: "A full-day event already exists for this date.",
-        statusCode: 409,
-      };
-    }
-  }
-
-  // --- Rule: Half-day – same type (AM or PM) only once per date (PDF: half AM + PM allowed, so two entries max) ---
+  // --- Rule: Half-day – same type (AM or PM) only once per date ( half AM + PM allowed, so two entries max) ---
   if (eventType === "HALF_LEAVE_AM") {
     const hasAM = existing.some((e) => e.eventType === "HALF_LEAVE_AM");
     if (hasAM) {
@@ -112,6 +100,7 @@ export function checkCanAddEvent(params: {
       };
     }
   }
+
   if (eventType === "HALF_LEAVE_PM") {
     const hasPM = existing.some((e) => e.eventType === "HALF_LEAVE_PM");
     if (hasPM) {
@@ -123,7 +112,7 @@ export function checkCanAddEvent(params: {
     }
   }
 
-  // --- Rule: Leave + WFH same day not allowed (PDF) ---
+  // --- Rule: Leave + WFH same day not allowed  ---
   if (eventType === WFH) {
     const hasLeave = existing.some((e) => isLeaveType(e.eventType));
     if (hasLeave) {
@@ -145,7 +134,7 @@ export function checkCanAddEvent(params: {
     }
   }
 
-  // --- Full-day already present blocks any new event on same date (PDF: one full-day per date) ---
+  // --- Full-day already present blocks any new event on same date  ---
   const hasFullDay = existing.some((e) => e.eventType === FULL_DAY);
   if (hasFullDay) {
     return {

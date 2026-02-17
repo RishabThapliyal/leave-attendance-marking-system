@@ -116,7 +116,7 @@ export default function AttendanceCalendarPage() {
     if (!selectedDate || !currentEmployee) return;
     try {
       setMarkError(null);
-      // If we are editing an existing event, follow PDF §9:
+      // If we are editing an existing event
       // 1) cancel original, 2) create new event.
       if (editingEventId) {
         await cancelAttendance({

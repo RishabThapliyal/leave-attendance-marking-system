@@ -40,7 +40,7 @@ function toEventOnDate(e: { eventType: string; status: string }): EventOnDate {
 }
 
 // ---------------------------------------------------------------------------
-// Mark attendance (PDF §7 POST /attendance)
+// Mark attendance ( POST / attendance)
 // ---------------------------------------------------------------------------
 
 export type MarkAttendanceResult =
@@ -64,6 +64,8 @@ export async function markAttendance(params: {
   const eventsOnDate = monthEvents
     .filter((e) => isSameCalendarDay(e.date, date))
     .map((e) => toEventOnDate({ eventType: e.eventType, status: e.status }));
+
+  //-----------------
 
   const addResult = checkCanAddEvent({
     date,
@@ -91,7 +93,7 @@ export async function markAttendance(params: {
 }
 
 // ---------------------------------------------------------------------------
-// Get attendance for month (PDF §7 GET /attendance?month=)
+// Get attendance for month ( GET / attendance?month=)
 // ---------------------------------------------------------------------------
 
 export async function getAttendanceForMonth(params: {
@@ -102,7 +104,7 @@ export async function getAttendanceForMonth(params: {
 }
 
 // ---------------------------------------------------------------------------
-// Cancel attendance (PDF §7 POST /attendance/:id/cancel, §9 Editing logic)
+// Cancel attendance ( POST /attendance/:id/cancel, §9 Editing logic)
 // ---------------------------------------------------------------------------
 
 export type CancelAttendanceResult =
@@ -142,7 +144,7 @@ export async function cancelAttendance(params: {
 }
 
 // ---------------------------------------------------------------------------
-// Lock month (PDF §7 POST /attendance/lock)
+// Lock month ( POST /attendance/lock)
 // ---------------------------------------------------------------------------
 
 export type LockMonthResult =

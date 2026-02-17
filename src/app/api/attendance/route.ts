@@ -8,7 +8,7 @@ import {
   getAttendanceForMonth,
 } from "@/server/attendance/service";
 
-// PDF §7: GET /attendance?month=YYYY-MM&employeeId=xxx
+// GET /attendance?month=YYYY-MM&employeeId=xxx
 export async function GET(request: NextRequest) {
   const searchParams = Object.fromEntries(request.nextUrl.searchParams);
   const parsed = safeParseMonthQuery(searchParams);
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
   );
 }
 
-// PDF §7: POST /attendance – date, eventType, reason?, employeeId, createdBy
+// POST /attendance – date, eventType, reason?, employeeId, createdBy
 export async function POST(request: NextRequest) {
   let body: unknown;
   try {

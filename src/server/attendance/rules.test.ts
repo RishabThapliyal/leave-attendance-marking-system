@@ -18,7 +18,7 @@ function ev(
 }
 
 // ---------------------------------------------------------------------------
-// PDF §14: Month lock enforcement
+// Month lock enforcement
 // ---------------------------------------------------------------------------
 describe("checkMonthNotLocked", () => {
   it("returns 423 when month is locked", () => {
@@ -34,7 +34,7 @@ describe("checkMonthNotLocked", () => {
 });
 
 // ---------------------------------------------------------------------------
-// PDF §14: Weekend voluntary logic
+// Weekend voluntary logic
 // ---------------------------------------------------------------------------
 describe("checkCanAddEvent – voluntary work only on weekends", () => {
   it("allows VOLUNTARY_WORK on Saturday", () => {
@@ -67,7 +67,7 @@ describe("checkCanAddEvent – voluntary work only on weekends", () => {
 });
 
 // ---------------------------------------------------------------------------
-// PDF §14: One full-day event per date
+// One full-day event per date
 // ---------------------------------------------------------------------------
 describe("checkCanAddEvent – one full-day per date", () => {
   it("allows first FULL_LEAVE on date", () => {
@@ -109,7 +109,7 @@ describe("checkCanAddEvent – one full-day per date", () => {
 });
 
 // ---------------------------------------------------------------------------
-// PDF §14: Half-day logic – AM + PM allowed, same type once
+// Half-day logic – AM + PM allowed, same type once
 // ---------------------------------------------------------------------------
 describe("checkCanAddEvent – half-day AM + PM allowed", () => {
   it("allows HALF_LEAVE_PM when HALF_LEAVE_AM exists same date", () => {
@@ -152,7 +152,7 @@ describe("checkCanAddEvent – half-day AM + PM allowed", () => {
 });
 
 // ---------------------------------------------------------------------------
-// PDF §14: Leave + WFH same day not allowed
+//  Leave + WFH same day not allowed
 // ---------------------------------------------------------------------------
 describe("checkCanAddEvent – leave and WFH same day not allowed", () => {
   it("rejects WFH when FULL_LEAVE exists same date", () => {

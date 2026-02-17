@@ -1,8 +1,7 @@
 
 
 generator client {
-  // Use the classic JS client with binary engine so we don't need
-  // Accelerate / adapters in this project.
+  
   provider   = "prisma-client-js"
   output     = "../src/generated"
   engineType = "binary"
@@ -77,7 +76,7 @@ model AttendanceAuditLog {
 }
 
 // ============================
-// Enums (as per PDF types)
+// Enums
 // ============================
 
 enum AttendanceEventType {

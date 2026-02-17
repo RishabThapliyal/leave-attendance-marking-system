@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// PDF §7: POST /attendance – date, eventType, reason (optional)
+// POST /attendance – date, eventType, reason (optional)
 const EVENT_TYPES = [
   "FULL_LEAVE",
   "HALF_LEAVE_AM",
@@ -19,7 +19,7 @@ export const markAttendanceBodySchema = z.object({
 
 export type MarkAttendanceBody = z.infer<typeof markAttendanceBodySchema>;
 
-// PDF §7: GET /attendance?month=YYYY-MM
+// GET /attendance?month=YYYY-MM
 const MONTH_REGEX = /^\d{4}-\d{2}$/;
 
 export const monthQuerySchema = z.object({
@@ -29,7 +29,7 @@ export const monthQuerySchema = z.object({
 
 export type MonthQuery = z.infer<typeof monthQuerySchema>;
 
-// PDF §7: POST /attendance/lock – employeeId, month
+// POST /attendance/lock – employeeId, month
 export const lockBodySchema = z.object({
   employeeId: z.string().min(1, "employeeId is required"),
   month: z.string().regex(MONTH_REGEX, "month must be YYYY-MM"),

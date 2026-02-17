@@ -6,7 +6,7 @@ const cancelBodySchema = z.object({
   createdBy: z.string().min(1, "createdBy is required"),
 });
 
-// PDF §7: POST /attendance/:id/cancel
+// POST /attendance/:id/cancel
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },

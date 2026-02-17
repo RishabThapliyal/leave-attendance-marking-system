@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { safeParseLockBody } from "@/server/attendance/validator";
 import { lockMonth } from "@/server/attendance/service";
 
-// PDF §7: POST /attendance/lock – employeeId, month, lockedBy
+// POST /attendance/lock – employeeId, month, lockedBy
 export async function POST(request: NextRequest) {
   let body: unknown;
   try {
