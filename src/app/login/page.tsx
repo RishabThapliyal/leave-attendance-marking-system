@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -102,3 +102,7 @@ export default function LoginPage() {
     </div>
   );
 }
+
+<Suspense fallback={<div>Loading...</div>}>
+  <LoginPage />
+</Suspense>;
