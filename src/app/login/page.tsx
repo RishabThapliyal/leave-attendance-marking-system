@@ -104,7 +104,7 @@ function LoginForm() {
 // ─── Main export (Suspense yahan wrap karo) ───
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--background)] p-4">
+    <div className="min-h-screen flex items-center justify-center bg-(--background) p-4">
       <Suspense fallback={<div className="text-zinc-400">Loading...</div>}>
         <LoginForm />
       </Suspense>
