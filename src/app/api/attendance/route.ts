@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { auth } from "@/lib/auth"; //N
 import {
   safeParseMarkAttendanceBody,
   safeParseMonthQuery,
@@ -8,15 +9,24 @@ import {
   getAttendanceForMonth,
 } from "@/server/attendance/service";
 
-// GET /attendance?month=YYYY-MM&employeeId=xxx
+// GET /attendance?month=YYYY-MM&employeeId=xxx (optional - defaults to self)
 export async function GET(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.employeeId) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const searchParams = Object.fromEntries(request.nextUrl.searchParams);
   const parsed = safeParseMonthQuery(searchParams);
   if (!parsed.success) {
     const msg = parsed.error.issues.map((e: any) => e.message).join("; ");
     return Response.json({ error: msg }, { status: 400 });
   }
-  const { month, employeeId } = parsed.data;
+  let { month, employeeId } = parsed.data;
+  const role = (session.user.role ?? "EMPLOYEE") as string;
+  if (role === "EMPLOYEE" && employeeId !== session.user.employeeId) {
+    employeeId = session.user.employeeId;
+  }
   const events = await getAttendanceForMonth({ employeeId, month });
   return Response.json(
     events.map((e) => ({
@@ -32,8 +42,13 @@ export async function GET(request: NextRequest) {
   );
 }
 
-// POST /attendance – date, eventType, reason?, employeeId, createdBy
+// POST /attendance – date, eventType, reason? (employeeId, createdBy from session)
 export async function POST(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.employeeId) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -45,11 +60,12 @@ export async function POST(request: NextRequest) {
     const msg = parsed.error.issues.map((e: any) => e.message).join("; ");
     return Response.json({ error: msg }, { status: 400 });
   }
-  const { employeeId, createdBy } = parsed.data;
+  const employeeId = session.user.employeeId;
+  const createdBy = session.user.employeeId;
   const result = await markAttendance({
     employeeId,
     createdBy,
-    body: parsed.data,
+    body: { ...parsed.data, employeeId, createdBy },
   });
   if (!("success" in result)) {
     return Response.json(

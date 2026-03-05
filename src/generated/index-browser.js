@@ -157,6 +157,17 @@ exports.Prisma.AttendanceAuditLogScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.UserScalarFieldEnum = {
+  id: 'id',
+  email: 'email',
+  passwordHash: 'passwordHash',
+  name: 'name',
+  employeeId: 'employeeId',
+  role: 'role',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -199,11 +210,18 @@ exports.AttendanceOverrideAction = exports.$Enums.AttendanceOverrideAction = {
   MODIFY: 'MODIFY'
 };
 
+exports.UserRole = exports.$Enums.UserRole = {
+  EMPLOYEE: 'EMPLOYEE',
+  MANAGER: 'MANAGER',
+  ADMIN: 'ADMIN'
+};
+
 exports.Prisma.ModelName = {
   AttendanceEvent: 'AttendanceEvent',
   AttendanceEventOverride: 'AttendanceEventOverride',
   AttendanceMonthLock: 'AttendanceMonthLock',
-  AttendanceAuditLog: 'AttendanceAuditLog'
+  AttendanceAuditLog: 'AttendanceAuditLog',
+  User: 'User'
 };
 
 /**

@@ -4,7 +4,8 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import type { DateClickArg } from "@fullcalendar/interaction";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useSession, signOut } from "next-auth/react";
 import type { AttendanceEventDto } from "@/store/attendanceApi";
 import {
   useCancelAttendanceMutation,
@@ -12,8 +13,6 @@ import {
   useLockMonthMutation,
   useMarkAttendanceMutation,
 } from "@/store/attendanceApi";
-
-import { employees, type Employee } from "@/data/employees";
 
 function toYearMonth(date: Date) {
   const year = date.getFullYear();
@@ -51,10 +50,22 @@ export default function AttendanceCalendarPage() {
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [markError, setMarkError] = useState<string | null>(null);
   const [lockMessage, setLockMessage] = useState<string | null>(null);
-  const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
+  const { data: session, status } = useSession();
   const [toasts, setToasts] = useState<
     { id: number; message: string; type: "success" | "error" }[]
   >([]);
+
+  const currentEmployee = useMemo(() => {
+    if (!session?.user?.employeeId) return null;
+    return {
+      id: session.user.employeeId,
+      name: session.user.name ?? "User",
+      role: (session.user.role ?? "EMPLOYEE") as
+        | "EMPLOYEE"
+        | "MANAGER"
+        | "ADMIN",
+    };
+  }, [session]);
 
   const showToast = (message: string, type: "success" | "error") => {
     const id = Date.now() + Math.random();
@@ -66,19 +77,11 @@ export default function AttendanceCalendarPage() {
     }
   };
 
-  // Load selected employee from localStorage (very simple "login" for this demo).
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const storedId = window.localStorage.getItem("currentEmployeeId");
-    if (!storedId) return;
-    const found = employees.find((e) => e.id === storedId) ?? null;
-    setCurrentEmployee(found);
-  }, []);
-
   const { data, isLoading, isError } = useGetAttendanceQuery(
     currentEmployee
       ? { month, employeeId: currentEmployee.id }
       : { month, employeeId: "no-employee" },
+    { skip: !currentEmployee },
   );
 
   const [markAttendance, { isLoading: isMarking }] =
@@ -232,7 +235,9 @@ export default function AttendanceCalendarPage() {
                 Leave &amp; Attendance Calendar
               </h1>
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                {currentEmployee ? (
+                {status === "loading" ? (
+                  <>Loading…</>
+                ) : currentEmployee ? (
                   <>
                     Showing attendance for{" "}
                     <span className="font-medium">{currentEmployee.name}</span>{" "}
@@ -299,48 +304,28 @@ export default function AttendanceCalendarPage() {
           className="w-full rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-800
                               dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 lg:w-1/4"
         >
-          <h2 className="mb-2 text-base font-semibold">Login / Employee</h2>
-          <p className="mb-3 text-xs text-zinc-500 dark:text-zinc-400">
-            Choose an employee to act as. This is a simple demo login – in a
-            real app this would be backed by proper authentication.
-          </p>
-
-          <div className="mb-4">
-            <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-300">
-              Current Employee
-            </label>
-            <select
-              className="w-full rounded-md border border-zinc-300 bg-white px-2 py-1 text-xs dark:border-zinc-700 dark:bg-zinc-900"
-              value={currentEmployee?.id ?? ""}
-              onChange={(e) => {
-                const id = e.target.value;
-                const emp = employees.find((em) => em.id === id) ?? null;
-                setCurrentEmployee(emp);
-                // Reset per-employee form state so old selections don't leak across users
-                setSelectedDate(null);
-                setSelectedEventType("FULL_LEAVE");
-                setReason("");
-                setEditingEventId(null);
-                setMarkError(null);
-                setLockMessage(null);
-                if (typeof window !== "undefined") {
-                  if (emp) {
-                    window.localStorage.setItem("currentEmployeeId", emp.id);
-                  } else {
-                    window.localStorage.removeItem("currentEmployeeId");
-                  }
-                }
-              }}
-            >
-              <option value="">Select employee…</option>
-              {employees.map((emp) => (
-                <option key={emp.id} value={emp.id}>
-                  {emp.name} ({emp.role.toLowerCase()})
-                </option>
-              ))}
-            </select>
-          </div>
-
+          <h2 className="mb-2 text-base font-semibold">Signed in</h2>
+          {status === "loading" ? (
+            <p className="mb-3 text-xs text-zinc-500 dark:text-zinc-400">
+              Loading…
+            </p>
+          ) : currentEmployee ? (
+            <>
+              <p className="mb-2 text-xs text-zinc-600 dark:text-zinc-300">
+                {currentEmployee.name}{" "}
+                <span className="uppercase text-zinc-500">
+                  ({currentEmployee.role})
+                </span>
+              </p>
+              <button
+                type="button"
+                onClick={() => signOut({ callbackUrl: "/login" })}
+                className="w-full rounded-md border border-zinc-400 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              >
+                Sign out
+              </button>
+            </>
+          ) : null}
           <hr className="my-3 border-zinc-200 dark:border-zinc-800" />
 
           <h2 className="mb-2 text-base font-semibold">Mark Attendance</h2>

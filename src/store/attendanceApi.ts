@@ -3,6 +3,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 // API routes are under: /api/...
 const baseQuery = fetchBaseQuery({
   baseUrl: "/api",
+  credentials: "include",
 });
 
 export type AttendanceEventDto = {

@@ -264,7 +264,8 @@ Cancels the event — marks it `CANCELLED`, creates an override + audit log entr
 
 ## 📖 Extra Documentation
 
-For detailed internals — file-by-file explanation, rule engine logic, DB schema — see [`PROJECT_DOCUMENTATION.md`](./PROJECT_DOCUMENTATION.md).
+- **Internals** — file-by-file explanation, rule engine logic, DB schema: [`PROJECT_DOCUMENTATION.md`](./PROJECT_DOCUMENTATION.md)
+- **🚀 Upgrade Roadmap** — step-by-step guide to make this project company-level (auth, leave balance, dashboard, testing): [`UPGRADE_ROADMAP.md`](./UPGRADE_ROADMAP.md)
 
 ---
 

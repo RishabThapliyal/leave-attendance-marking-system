@@ -1,6 +1,4 @@
 generator client {
-  // Use the classic JS client with binary engine so we don't need
-  // Accelerate / adapters in this project.
   provider   = "prisma-client-js"
   output     = "../src/generated"
   engineType = "binary"
@@ -72,8 +70,29 @@ model AttendanceAuditLog {
 }
 
 // ============================
-// Enums (as per PDF types)
+// User (for authentication)
 // ============================
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  employeeId   String   @unique // links to emp-111, emp-222 etc
+  role         UserRole @default(EMPLOYEE)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ============================
+// Enums
+// ============================
+
+enum UserRole {
+  EMPLOYEE
+  MANAGER
+  ADMIN
+}
 
 enum AttendanceEventType {
   FULL_LEAVE
