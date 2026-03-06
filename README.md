@@ -8,6 +8,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-App%20Router-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech)
+[![NextAuth](https://img.shields.io/badge/Auth-NextAuth.js-purple?style=for-the-badge)](https://authjs.dev)
 
 </div>
 
@@ -21,6 +22,8 @@ Employees can mark leave / WFH / voluntary work via a calendar UI with strong ba
 - ✅ **Immutable events** — no in-place edits, cancel + recreate strategy
 - ✅ Server-side rule engine for all operations
 - ✅ Month-level locking & audit logging for payroll integration
+- ✅ **Real authentication** — NextAuth.js with JWT sessions + bcrypt password hashing
+- ✅ **Session-based API authorization** — all APIs secured, employeeId from session only
 - ✅ Deployed on **Netlify (serverless)** + **Neon (Cloud PostgreSQL)**
 
 > All timestamps stored in **UTC** in DB and converted to user's local timezone on the client.
@@ -28,6 +31,17 @@ Employees can mark leave / WFH / voluntary work via a calendar UI with strong ba
 ---
 
 ## ✨ Features
+
+### 🔐 Authentication & Authorization
+
+- Real login system — email + password, verified against database
+- Passwords stored as **bcrypt hashes** — never plain text
+- **JWT sessions** — persist across browser refresh (30 day expiry)
+- **Middleware route protection** — unauthenticated users redirected to `/login`
+- **Role-based access control**:
+  - `EMPLOYEE` — can only view/mark their own attendance
+  - `MANAGER` — can mark attendance + lock months
+  - `ADMIN` — full access
 
 ### 🗓️ FullCalendar UI
 
@@ -56,23 +70,19 @@ Color-coded events at a glance:
 
 - Managers/Admins can lock a month for an employee
 - Locked months reject all operations with `HTTP 423`
+- Employees cannot lock months — enforced at API level
 
 ### 🧠 Rule Engine + Audit Logging
 
 - Central rule engine (`rules.ts`) returning `{ allowed, reason, statusCode }`
 - All create / cancel / lock operations write to an **audit log** table
 
-### 👤 Demo Login & Roles
-
-| Role     | Permissions                 |
-| -------- | --------------------------- |
-| EMPLOYEE | Mark / Cancel attendance    |
-| MANAGER  | Mark / Cancel + Lock months |
-| ADMIN    | Full access                 |
-
 ---
 
 ## 📸 Screenshots
+
+**Login Page**
+![Login page](./public/Images/login-page.png)
 
 **Main Calendar View**
 ![Main calendar view](./public/Images/calendar-main.png)
@@ -106,12 +116,14 @@ Color-coded events at a glance:
 | -------------------- | ----------------------------------------------------- |
 | **Frontend**         | Next.js (App Router), React, TypeScript, FullCalendar |
 | **State Management** | Redux Toolkit + RTK Query                             |
-| **Styling**          | Tailwind CSS                                          |
+| **Styling**          | Tailwind CSS v4                                       |
+| **Authentication**   | NextAuth.js v5 (Auth.js) — JWT strategy               |
+| **Password Hashing** | bcryptjs                                              |
 | **Backend**          | Next.js API Routes, Node.js, TypeScript               |
 | **Validation**       | Zod                                                   |
 | **ORM**              | Prisma v7                                             |
 | **Database**         | PostgreSQL (Neon Cloud)                               |
-| **Testing**          | Vitest (rule engine)                                  |
+| **Testing**          | Vitest (rule engine unit tests)                       |
 | **Deployment**       | Netlify (serverless)                                  |
 
 ---
@@ -121,7 +133,7 @@ Color-coded events at a glance:
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/RishabThapliyal/leave-attendance-marking-system
 cd major-project
 ```
 
@@ -137,12 +149,13 @@ Create a `.env` file in the project root:
 
 ```env
 DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DB_NAME
+AUTH_SECRET=your-random-32-char-secret
 ```
 
-Example (local Postgres):
+Generate `AUTH_SECRET`:
 
-```env
-DATABASE_URL=postgresql://postgres:password@localhost:5432/attendance_db
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
 ### 4. Prisma setup
@@ -151,29 +164,44 @@ DATABASE_URL=postgresql://postgres:password@localhost:5432/attendance_db
 # Generate Prisma client
 npx prisma generate
 
-# Apply migrations
+# Apply migrations (creates all tables including User)
 npx prisma migrate dev
 ```
 
-### 5. Run development server
+### 5. Seed demo users
+
+```bash
+npm run db:seed
+```
+
+This creates 3 demo accounts:
+
+| Email             | Password    | Role     |
+| ----------------- | ----------- | -------- |
+| alice@example.com | password123 | EMPLOYEE |
+| rohit@example.com | password123 | MANAGER  |
+| admin@example.com | password123 | ADMIN    |
+
+### 6. Run development server
 
 ```bash
 npm run dev
 ```
 
-Open **http://localhost:3000**
+Open **http://localhost:3000** → redirects to `/login`
 
 ---
 
 ## 🚀 Quick Demo (How to Use)
 
-1. Go to the right sidebar → **Login / Employee**
-2. Select an employee (e.g. `Alice Sharma (employee)`)
-3. Click a date on the calendar → Selected Date updates
+1. Go to `https://leave-attendance-system.netlify.app`
+2. Login with `alice@example.com` / `password123`
+3. Click a date on the calendar → Selected Date updates in sidebar
 4. Choose an **Attendance Type** and optional **Reason**
 5. Click **Save Attendance**
 6. To **edit** an event — click on it → form pre-fills → **Update Attendance**
-7. To **lock a month** — switch to a MANAGER/ADMIN employee → click **Lock {month}**
+7. To **lock a month** — login as `rohit@example.com` (MANAGER) → click **Lock {month}**
+8. To **sign out** — click **Sign out** in the sidebar
 
 ---
 
@@ -181,13 +209,15 @@ Open **http://localhost:3000**
 
 All routes are under `src/app/api/attendance/` and called via RTK Query.
 
+> **All API routes require an active session.** Unauthenticated requests return `401 Unauthorized`.
+
 ### `GET /api/attendance`
 
 ```
 ?month=YYYY-MM&employeeId=EMP_ID
 ```
 
-Returns all events for a given employee and month.
+Returns all events for a given employee and month. `employeeId` from session for EMPLOYEE role — query param ignored.
 
 ```json
 [
@@ -208,45 +238,46 @@ Returns all events for a given employee and month.
 
 ### `POST /api/attendance`
 
+`employeeId` and `createdBy` are taken from session — not required in body.
+
 ```json
 {
   "date": "2026-02-10",
   "eventType": "FULL_LEAVE",
-  "reason": "Optional text",
-  "employeeId": "emp-111",
-  "createdBy": "emp-111"
+  "reason": "Optional text"
 }
 ```
 
 - ✅ `201 Created` — returns the created event
-- ❌ `400 / 409 / 423` — returns `{ "error": "..." }` on rule violation or locked month
+- ❌ `400 / 409 / 423` — rule violation or locked month
+- ❌ `401` — not authenticated
 
 ---
 
 ### `POST /api/attendance/:id/cancel`
 
-```json
-{
-  "createdBy": "emp-111"
-}
-```
+No body required — `createdBy` taken from session.
 
-Cancels the event — marks it `CANCELLED`, creates an override + audit log entry.
+- ✅ `200` — event cancelled
+- ❌ `401` — not authenticated
+- ❌ `423` — month is locked
 
 ---
 
 ### `POST /api/attendance/lock`
 
+MANAGER or ADMIN only. `lockedBy` taken from session.
+
 ```json
 {
   "employeeId": "emp-111",
-  "month": "2026-02",
-  "lockedBy": "emp-222"
+  "month": "2026-02"
 }
 ```
 
-- ✅ Returns created month lock
-- ❌ `409` — if month is already locked
+- ✅ `201` — month locked
+- ❌ `403` — EMPLOYEE role cannot lock
+- ❌ `409` — already locked
 
 ---
 
@@ -258,6 +289,19 @@ Cancels the event — marks it `CANCELLED`, creates an override + audit log entr
 | Database              | Neon (Cloud PostgreSQL) |
 | Environment Variables | Netlify Dashboard       |
 
+**Required env vars on Netlify:**
+
+- `DATABASE_URL` — Neon connection string
+- `AUTH_SECRET` — JWT signing secret
+- `NEXTAUTH_URL` — your live site URL
+- `AUTH_TRUST_HOST` — `true`
+
+**Build command:**
+
+```
+npx prisma generate && npx prisma migrate deploy && npm run build
+```
+
 **Live Demo:** https://leave-attendance-system.netlify.app/
 
 ---
@@ -265,7 +309,7 @@ Cancels the event — marks it `CANCELLED`, creates an override + audit log entr
 ## 📖 Extra Documentation
 
 - **Internals** — file-by-file explanation, rule engine logic, DB schema: [`PROJECT_DOCUMENTATION.md`](./PROJECT_DOCUMENTATION.md)
-- **🚀 Upgrade Roadmap** — step-by-step guide to make this project company-level (auth, leave balance, dashboard, testing): [`UPGRADE_ROADMAP.md`](./UPGRADE_ROADMAP.md)
+- **🚀 Upgrade Roadmap** — step-by-step guide to next features (leave balance, dashboard, notifications): [`UPGRADE_ROADMAP.md`](./UPGRADE_ROADMAP.md)
 
 ---
 
