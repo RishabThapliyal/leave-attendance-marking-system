@@ -18,7 +18,6 @@ export const metadata: Metadata = {
   description: "Leave and attendance marking system with FullCalendar",
 };
 
-// Mobile par sahi zoom/layout ke liye — bina iske kuch phones CSS galat apply karte hain
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
