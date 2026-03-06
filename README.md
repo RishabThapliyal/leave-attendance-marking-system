@@ -82,7 +82,7 @@ Color-coded events at a glance:
 ## 📸 Screenshots
 
 **Login Page**
-![Login page](./public/Images/login-page.png)
+![Login page](./public/Images/calendar-login.png)
 
 **Main Calendar View**
 ![Main calendar view](./public/Images/calendar-main.png)
@@ -95,6 +95,9 @@ Color-coded events at a glance:
 
 **Locked Month Prevents Changes (423)**
 ![Locked month 423 error example](./public/Images/calendar-month-locked-error.png)
+
+**Database — User Table**
+![Database User events](./public/Images/db-user.png)
 
 **Database — AttendanceEvent Table**
 ![Database attendance events](./public/Images/db-attendance-events.png)
