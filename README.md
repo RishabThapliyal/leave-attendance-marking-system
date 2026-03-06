@@ -312,7 +312,6 @@ npx prisma generate && npx prisma migrate deploy && npm run build
 ## 📖 Extra Documentation
 
 - **Internals** — file-by-file explanation, rule engine logic, DB schema: [`PROJECT_DOCUMENTATION.md`](./PROJECT_DOCUMENTATION.md)
-- **🚀 Upgrade Roadmap** — step-by-step guide to next features (leave balance, dashboard, notifications): [`UPGRADE_ROADMAP.md`](./UPGRADE_ROADMAP.md)
 
 ---
 
