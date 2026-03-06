@@ -24,6 +24,12 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
+// Inline critical CSS — agar phone pe main stylesheet load na ho to bhi dark theme + text color apply ho
+const criticalCSS = `
+  :root{--bg:#0a0a0a;--fg:#ededed}
+  html,body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,sans-serif}
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -34,6 +40,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <style dangerouslySetInnerHTML={{ __html: criticalCSS }} />
         <Providers>{children}</Providers>
       </body>
     </html>
