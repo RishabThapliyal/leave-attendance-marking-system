@@ -44,7 +44,11 @@ function LoginForm() {
         Sign in with your email
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4"
+        suppressHydrationWarning
+      >
         <div>
           <label
             htmlFor="email"
@@ -104,7 +108,10 @@ function LoginForm() {
 // ─── Main export (Suspense yahan wrap karo) ───
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-(--background) p-4">
+    <div
+      className="min-h-screen flex items-center justify-center bg-[var(--background)] p-4"
+      suppressHydrationWarning
+    >
       <Suspense fallback={<div className="text-zinc-400">Loading...</div>}>
         <LoginForm />
       </Suspense>
