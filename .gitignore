@@ -33,6 +33,10 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+STEP1_AUTH_LOG.md
+UPGRADE_ROADMAP.md
+
+
 # vercel
 .vercel
 
