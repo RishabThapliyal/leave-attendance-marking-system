@@ -37,6 +37,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Static CSS — phone pe bundle fail ho to bhi ye load hoti hai */}
+        <link rel="stylesheet" href="/critical.css" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
