@@ -531,11 +531,11 @@ API returns `{ error: message }` with status code. Frontend shows message in for
 | `DATABASE_URL`    | Neon PostgreSQL connection string | ✅            |
 | `AUTH_SECRET`     | JWT signing secret (32+ chars)    | ✅            |
 | `NEXTAUTH_URL`    | Live site URL (production only)   | ✅ Production |
-| `AUTH_TRUST_HOST` | `true` — required for Netlify     | ✅ Production |
+| `AUTH_TRUST_HOST` | `true` — required in production   | ✅ Production |
 
 ---
 
-## 9. Deployment (Netlify + Neon)
+## 9. Deployment (Vercel + Neon)
 
 **Build command:**
 
@@ -543,7 +543,7 @@ API returns `{ error: message }` with status code. Frontend shows message in for
 npx prisma generate && npx prisma migrate deploy && npm run build
 ```
 
-- `prisma generate` — regenerates Prisma client for Netlify's environment.
+- `prisma generate` — regenerates Prisma client for deployment environment.
 - `prisma migrate deploy` — applies any pending migrations to live Neon DB.
 - `next build` — compiles Next.js app.
 

@@ -4,7 +4,7 @@
 
 **Enterprise-style attendance system built on FullCalendar — designed like a financial ledger.**
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit-f59e0b?style=for-the-badge&logo=netlify&logoColor=black)](https://leave-attendance-system.netlify.app/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://leave-attendance-marking-system.vercel.app/)
 [![Next.js](https://img.shields.io/badge/Next.js-App%20Router-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech)
@@ -24,7 +24,7 @@ Employees can mark leave / WFH / voluntary work via a calendar UI with strong ba
 - ✅ Month-level locking & audit logging for payroll integration
 - ✅ **Real authentication** — NextAuth.js with JWT sessions + bcrypt password hashing
 - ✅ **Session-based API authorization** — all APIs secured, employeeId from session only
-- ✅ Deployed on **Netlify (serverless)** + **Neon (Cloud PostgreSQL)**
+- ✅ Deployed on **Vercel** + **Neon (Cloud PostgreSQL)**
 
 > All timestamps stored in **UTC** in DB and converted to user's local timezone on the client.
 
@@ -127,7 +127,7 @@ Color-coded events at a glance:
 | **ORM**              | Prisma v7                                             |
 | **Database**         | PostgreSQL (Neon Cloud)                               |
 | **Testing**          | Vitest (rule engine unit tests)                       |
-| **Deployment**       | Netlify (serverless)                                  |
+| **Deployment**       | Vercel                                                |
 
 ---
 
@@ -197,7 +197,7 @@ Open **http://localhost:3000** → redirects to `/login`
 
 ## 🚀 Quick Demo (How to Use)
 
-1. Go to `https://leave-attendance-system.netlify.app`
+1. Go to `https://leave-attendance-marking-system.vercel.app/`
 2. Login with `alice@example.com` / `password123`
 3. Click a date on the calendar → Selected Date updates in sidebar
 4. Choose an **Attendance Type** and optional **Reason**
@@ -288,11 +288,11 @@ MANAGER or ADMIN only. `lockedBy` taken from session.
 
 | Service               | Platform                |
 | --------------------- | ----------------------- |
-| Frontend + API        | Netlify (Serverless)    |
+| Frontend + API        | Vercel                  |
 | Database              | Neon (Cloud PostgreSQL) |
-| Environment Variables | Netlify Dashboard       |
+| Environment Variables | Vercel Project Settings |
 
-**Required env vars on Netlify:**
+**Required env vars on Vercel:**
 
 - `DATABASE_URL` — Neon connection string
 - `AUTH_SECRET` — JWT signing secret
@@ -305,7 +305,7 @@ MANAGER or ADMIN only. `lockedBy` taken from session.
 npx prisma generate && npx prisma migrate deploy && npm run build
 ```
 
-**Live Demo:** https://leave-attendance-system.netlify.app/
+**Live Demo:** https://leave-attendance-marking-system.vercel.app/
 
 ---
 
